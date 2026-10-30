@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asha's Oven - Order Portal & Showcase</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bakery: {
+                            50: '#fff5f7', 100: '#ffe3eb', 200: '#fbcbd9', 300: '#f793b1',
+                            400: '#f05b86', 500: '#e53366', 600: '#cc1a50', 700: '#aa113f',
+                            800: '#8c1238', 900: '#751333', gold: '#d4af37', cream: '#fdfbf7'
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Playfair Display', 'Georgia', 'serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fff8f9; color: #4a3b3c; -webkit-tap-highlight-color: transparent; }
+        .serif-font { font-family: 'Playfair Display', Georgia, serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(251, 203, 217, 0.6); }
+    </style>
+</head>
+<body class="min-h-screen pb-16 flex flex-col items-center">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-medium">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- Header Banner -->
+    <header class="w-full max-w-md md:max-w-2xl bg-gradient-to-r from-bakery-700 via-bakery-600 to-bakery-800 text-white rounded-b-3xl shadow-lg p-6 mb-4 relative overflow-hidden">
+        <div class="flex justify-between items-center mb-3">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-white/20 px-3 py-1 rounded-full text-bakery-50 backdrop-blur-md">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Order 2 Days in Advance
+            </span>
+        </div>
+        <div class="text-center my-2">
+            <h1 class="serif-font text-3xl md:text-4xl font-bold tracking-wide text-white drop-shadow-md">Asha's Oven</h1>
+            <p class="text-xs md:text-sm font-light text-bakery-100 mt-1 italic">Inventing Tomorrow, Today • Artisan Cakes & Confectionery</p>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="w-full max-w-md md:max-w-2xl px-4 mb-5">
+        <div class="flex bg-white/90 p-1.5 rounded-2xl shadow-sm border border-bakery-200 gap-1 text-xs md:text-sm">
+            <button id="tab-gallery-btn" onclick="switchTab('gallery')" class="flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 bg-bakery-600 text-white shadow-sm">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> Cake Designs
+            </button>
+            <button id="tab-order-btn" onclick="switchTab('order')" class="flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 text-bakery-800 hover:bg-bakery-100/60">
+                <i data-lucide="shopping-bag" class="w-4 h-4"></i> Order Form
+            </button>
+            <button id="tab-videos-btn" onclick="switchTab('videos')" class="flex-1 py-2.5 px-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 text-bakery-800 hover:bg-bakery-100/60">
+                <i data-lucide="clapperboard" class="w-4 h-4"></i> Video Reel
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-md md:max-w-2xl px-4 flex-1">
+
+        <!-- SECTION 1: ANIMATED CAROUSEL & GALLERY -->
+        <section id="tab-gallery" class="space-y-6">
+            <!-- Animated Slideshow Carousel -->
+            <div class="glass-card rounded-3xl p-4 shadow-md border border-bakery-200 relative overflow-hidden">
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h2 class="serif-font text-lg font-bold text-bakery-900 flex items-center gap-2">
+                        <i data-lucide="flame" class="w-5 h-5 text-bakery-500"></i> Featured Highlights
+                    </h2>
+                    <div class="flex gap-1.5">
+                        <button onclick="prevSlide()" class="p-1.5 rounded-full bg-bakery-100 hover:bg-bakery-200 text-bakery-800 transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <button onclick="nextSlide()" class="p-1.5 rounded-full bg-bakery-100 hover:bg-bakery-200 text-bakery-800 transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+                <div id="carousel-box" class="relative w-full aspect-[16/10] bg-gray-100 rounded-2xl overflow-hidden shadow-inner group">
+                    <img id="carousel-img" src="" alt="Featured Cake" class="w-full h-full object-cover transition-all duration-500 transform scale-100 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 text-white">
+                        <span id="carousel-tag" class="text-[10px] bg-bakery-500 text-white font-bold px-2 py-0.5 rounded-full w-max mb-1">Featured</span>
+                        <h3 id="carousel-title" class="serif-font font-bold text-lg leading-tight">Loading Showcase...</h3>
+                        <p id="carousel-desc" class="text-xs text-gray-200 mt-1 line-clamp-1">Freshly baked handcrafted items</p>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span id="carousel-price" class="text-amber-300 font-bold text-sm"></span>
+                            <button id="carousel-order-btn" onclick="" class="bg-white text-bakery-800 hover:bg-bakery-50 text-xs font-bold px-3 py-1.5 rounded-xl shadow-md transition-all flex items-center gap-1">
+                                <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Order This Design
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Gallery Grid -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center px-1">
+                    <h3 class="serif-font text-xl font-bold text-bakery-900">Explore All Creations</h3>
+                    <span class="text-xs text-gray-500">Tap image to order style</span>
+                </div>
+                <div id="gallery-grid" class="grid grid-cols-2 gap-3.5"></div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: ORDER FORM WITH LIVE SUMMARY -->
+        <section id="tab-order" class="space-y-4 hidden">
+            <div class="glass-card rounded-3xl p-5 md:p-6 shadow-md border border-bakery-200">
+                <h2 class="serif-font text-xl font-bold text-bakery-900 mb-4">Complete Your Cake Order</h2>
+                <form id="orderForm" class="space-y-4" onsubmit="handleOrderSubmission(event)">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Your Name *</label>
+                        <input type="text" id="custName" required placeholder="e.g., Sarah Namubiru" oninput="updateSummary()" class="w-full p-2.5 bg-bakery-50 border border-bakery-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Phone / WhatsApp Number *</label>
+                        <input type="tel" id="custPhone" required placeholder="e.g., 0746803012" oninput="updateSummary()" class="w-full p-2.5 bg-bakery-50 border border-bakery-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Delivery Address *</label>
+                        <textarea id="custAddress" required rows="2" placeholder="e.g., Ggaba, near Shell Station" oninput="updateSummary()" class="w-full p-2 bg-bakery-50 border border-bakery-200 rounded-xl text-xs resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Category *</label>
+                        <select id="custCategory" onchange="updateSummary()" class="w-full p-2.5 bg-bakery-50 border border-bakery-200 rounded-xl text-xs">
+                            <option value="Custom Cake">Custom Birthday Cake</option>
+                            <option value="Cupcakes Bundle">Cupcake Set</option>
+                            <option value="Brownies Box">Gourmet Brownies</option>
+                            <option value="Wedding Cake">Tiered Wedding Cake</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Size & Flavors *</label>
+                        <input type="text" id="custSize" required placeholder="e.g., 8-inch, Chocolate Fudge" oninput="updateSummary()" class="w-full p-2.5 bg-bakery-50 border border-bakery-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Design Theme / Inscription</label>
+                        <textarea id="custNotes" rows="2" placeholder="e.g., Happy Birthday Alex!" oninput="updateSummary()" class="w-full p-2 bg-bakery-50 border border-bakery-200 rounded-xl text-xs resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Fulfillment</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="p-2.5 bg-bakery-50 border border-bakery-200 rounded-xl cursor-pointer text-xs"><input type="radio" name="fulfillment" value="Local Delivery" checked onchange="updateSummary()"> Delivery</label>
+                            <label class="p-2.5 bg-bakery-50 border border-bakery-200 rounded-xl cursor-pointer text-xs"><input type="radio" name="fulfillment" value="Store Pickup" onchange="updateSummary()"> Pickup</label>
+                        </div>
+                    </div>
+
+                    <!-- Live WhatsApp Summary Box -->
+                    <div class="bg-bakery-50 border border-bakery-200 rounded-2xl p-3.5 text-xs text-gray-700 space-y-1">
+                        <div class="font-semibold text-bakery-900 border-b border-bakery-200 pb-1 mb-1.5 flex justify-between items-center">
+                            <span>WhatsApp Message Formatting</span>
+                            <i data-lucide="message-square" class="w-3.5 h-3.5 text-bakery-500"></i>
+                        </div>
+                        <p id="previewText" class="italic text-gray-600 font-mono text-[11px] leading-relaxed whitespace-pre-line"></p>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg text-sm flex items-center justify-center gap-2">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i> Send Order to WhatsApp Now
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECTION 3: VIDEO REELS -->
+        <section id="tab-videos" class="space-y-4 hidden">
+            <h2 class="serif-font text-xl font-bold text-bakery-900">Behind the Oven Video Reel</h2>
+            <div id="video-feed" class="space-y-4"></div>
+        </section>
+    </main>
+
+    <script>
+        const BUSINESS_PHONE = "256746803012";
+        const DB_NAME = "AshasOvenDatabase";
+        const DB_VERSION = 1;
+
+        function openDB() {
+            return new Promise((resolve) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains("gallery")) db.createObjectStore("gallery", { keyPath: "id" });
+                    if (!db.objectStoreNames.contains("videos")) db.createObjectStore("videos", { keyPath: "id" });
+                    if (!db.objectStoreNames.contains("orders")) db.createObjectStore("orders", { keyPath: "id" });
+                };
+                req.onsuccess = (e) => resolve(e.target.result);
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        async function getAllData(storeName) {
+            const db = await openDB();
+            if (!db) return [];
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, "readonly");
+                const req = tx.objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        async function saveData(storeName, dataObj) {
+            const db = await openDB();
+            if (!db) return;
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).put(dataObj);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        let currentSlide = 0;
+        let galleryItems = [];
+        let slideInterval = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            galleryItems = await getAllData("gallery");
+            if (galleryItems.length === 0) {
+                galleryItems = [
+                    { id: 'c1', title: 'Floral Velvet Elegance', desc: 'Soft red velvet with organic buttercream flowers', price: 'UGX 120,000', tag: 'Popular', img: 'https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=600&q=80' },
+                    { id: 'c2', title: 'Gourmet Chocolate Fudge', desc: 'Rich dark chocolate ganache topped with berries', price: 'UGX 140,000', tag: 'Bestseller', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80' }
+                ];
+                for (let item of galleryItems) await saveData("gallery", item);
+            }
+            renderCarousel();
+            renderGalleryGrid();
+            renderVideos();
+            updateSummary();
+            startCarouselTimer();
+        });
+
+        function switchTab(tab) {
+            ['gallery', 'order', 'videos'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}-btn`).className = "flex-1 py-2.5 px-3 rounded-xl font-semibold text-bakery-800 hover:bg-bakery-100/60";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}-btn`).className = "flex-1 py-2.5 px-3 rounded-xl font-semibold bg-bakery-600 text-white shadow-sm";
+        }
+
+        function renderCarousel() {
+            if (galleryItems.length === 0) return;
+            if (currentSlide >= galleryItems.length) currentSlide = 0;
+            const item = galleryItems[currentSlide];
+            document.getElementById('carousel-img').src = item.img;
+            document.getElementById('carousel-title').innerText = item.title;
+            document.getElementById('carousel-desc').innerText = item.desc || '';
+            document.getElementById('carousel-price').innerText = item.price || '';
+            document.getElementById('carousel-tag').innerText = item.tag || 'Featured';
+            document.getElementById('carousel-order-btn').setAttribute('onclick', `selectDesign('${item.title.replace(/'/g, "\\'")}')`);
+        }
+
+        function nextSlide() {
+            if (galleryItems.length === 0) return;
+            currentSlide = (currentSlide + 1) % galleryItems.length;
+            renderCarousel();
+        }
+
+        function prevSlide() {
+            if (galleryItems.length === 0) return;
+            currentSlide = (currentSlide - 1 + galleryItems.length) % galleryItems.length;
+            renderCarousel();
+        }
+
+        function startCarouselTimer() {
+            slideInterval = setInterval(() => {
+                if (galleryItems.length > 0) {
+                    currentSlide = (currentSlide + 1) % galleryItems.length;
+                    renderCarousel();
+                }
+            }, 5000);
+        }
+
+        async function renderGalleryGrid() {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = galleryItems.map(item => `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm cursor-pointer group" onclick="selectDesign('${item.title.replace(/'/g, "\\'")}')">
+                    <img src="${item.img}" class="w-full h-32 object-cover group-hover:scale-105 transition-all">
+                    <div class="p-3">
+                        <h4 class="font-bold text-xs text-bakery-900">${item.title}</h4>
+                        <span class="text-xs font-bold text-bakery-700">${item.price || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        async function renderVideos() {
+            const feed = document.getElementById('video-feed');
+            const videos = await getAllData("videos");
+            feed.innerHTML = videos.length === 0 ? '<p class="text-xs text-gray-500 text-center py-4">No video reels published yet.</p>' :
+                videos.map(v => `<div class="glass-card rounded-2xl p-3"><video src="${v.url}" controls class="w-full h-48 rounded-xl object-cover"></video><h4 class="font-bold text-sm mt-2">${v.title}</h4></div>`).join('');
+        }
+
+        function selectDesign(title) {
+            switchTab('order');
+            document.getElementById('custSize').value = title;
+            updateSummary();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateSummary() {
+            const name = document.getElementById('custName').value.trim() || '[Your Name]';
+            const phone = document.getElementById('custPhone').value.trim() || '[Phone Number]';
+            const address = document.getElementById('custAddress').value.trim() || '[Delivery Address]';
+            const category = document.getElementById('custCategory').value;
+            const size = document.getElementById('custSize').value.trim() || '[Size & Flavors]';
+            const notes = document.getElementById('custNotes').value.trim() || 'None';
+            const fulfillment = document.querySelector('input[name="fulfillment"]:checked').value;
+
+            document.getElementById('previewText').innerText = `*New Cake Order* 🎂\n------------------\n*Name:* ${name}\n*Phone:* ${phone}\n*Address:* ${address}\n*Category:* ${category}\n*Details:* ${size}\n*Fulfillment:* ${fulfillment}\n*Theme/Notes:* ${notes}\n------------------\nPlease confirm price & delivery!`;
+        }
+
+        async function handleOrderSubmission(e) {
+            e.preventDefault();
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const address = document.getElementById('custAddress').value.trim();
+            const category = document.getElementById('custCategory').value;
+            const size = document.getElementById('custSize').value.trim();
+            const notes = document.getElementById('custNotes').value.trim();
+            const fulfillment = document.querySelector('input[name="fulfillment"]:checked').value;
+
+            await saveData("orders", { id: 'ord_' + Date.now(), name, phone, address, category, size, notes, fulfillment, date: new Date().toLocaleString() });
+
+            const text = `*New Cake Order* 🎂%0A------------------%0A*Name:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}%0A*Category:* ${category}%0A*Details:* ${size}%0A*Fulfillment:* ${fulfillment}%0A*Notes:* ${notes || 'None'}%0A------------------%0APlease confirm final price.`;
+            window.open(`https://api.whatsapp.com/send?phone=${BUSINESS_PHONE}&text=${text}`, '_blank');
+        }
+    </script>
+</body>
+</html>

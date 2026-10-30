@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asha's Oven - Owner Management & Ledger</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-gray-900 text-gray-100 p-4 flex flex-col items-center">
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 right-4 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-medium">
+        <span id="toast-msg">Success</span>
+    </div>
+
+    <!-- Login / Authentication Screen -->
+    <div id="authScreen" class="w-full max-w-md bg-gray-800 p-6 rounded-3xl shadow-2xl mt-12 space-y-4 border border-gray-700">
+        <div class="text-center space-y-1">
+            <h1 class="text-xl font-bold text-pink-400">Owner Secure Login</h1>
+            <p class="text-xs text-gray-400">Enter PIN to access financial ledger & records.</p>
+        </div>
+        <input type="password" id="pinInput" placeholder="Enter PIN (Default: 1234)" class="w-full text-center p-3 bg-gray-900 border border-gray-700 rounded-xl text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-pink-500">
+        <button onclick="verifyPin()" class="w-full py-3 bg-pink-600 hover:bg-pink-700 font-bold rounded-xl text-sm transition-all">Unlock Dashboard</button>
+        <div class="text-center pt-2">
+            <button onclick="resetPinToDefault()" class="text-[11px] text-gray-400 hover:underline">Forgot PIN? Reset to Default (1234)</button>
+        </div>
+    </div>
+
+    <!-- Unlocked Owner Dashboard -->
+    <div id="dashboardScreen" class="w-full max-w-2xl bg-gray-800 p-6 rounded-3xl shadow-2xl space-y-6 hidden border border-gray-700 mt-4">
+        <div class="flex justify-between items-center border-b border-gray-700 pb-4">
+            <div>
+                <h1 class="text-xl font-bold text-pink-400">Asha's Oven - Owner Ledger</h1>
+                <p class="text-xs text-gray-400">Manage catalog, orders & revenue.</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="openPasswordModal()" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg">Change PIN</button>
+                <button onclick="location.reload()" class="text-xs bg-red-900/60 hover:bg-red-900 px-3 py-1.5 rounded-lg text-red-200">Lock Panel</button>
+            </div>
+        </div>
+
+        <!-- Financial Summary Cards -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700 text-center">
+                <h3 id="totalRevenueUGX" class="text-lg font-bold text-emerald-400">0 UGX</h3>
+                <span class="text-xs text-gray-400">Total Revenue Collected</span>
+            </div>
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700 text-center">
+                <h3 id="totalOrdersCount" class="text-lg font-bold text-pink-400">0</h3>
+                <span class="text-xs text-gray-400">Total Orders Recorded</span>
+            </div>
+        </div>
+
+        <button onclick="exportDataToCSV()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+            📥 Export Ledger to Excel (CSV)
+        </button>
+
+        <!-- Navigation Sub-Tabs -->
+        <div class="flex bg-gray-900 p-1 rounded-xl text-xs gap-1 border border-gray-700">
+            <button id="admin-tab-orders-btn" onclick="switchAdminTab('orders')" class="flex-1 py-2 font-bold rounded-lg bg-gray-800 text-white shadow-sm">Orders & Ledger</button>
+            <button id="admin-tab-payment-btn" onclick="switchAdminTab('payment')" class="flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white">Record Payment</button>
+            <button id="admin-tab-upload-btn" onclick="switchAdminTab('upload')" class="flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white">Upload Media</button>
+            <button id="admin-tab-items-btn" onclick="switchAdminTab('items')" class="flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white">Catalog</button>
+        </div>
+
+        <!-- SUB-TAB 1: ORDERS & PAYMENTS -->
+        <div id="admin-sec-orders" class="space-y-4">
+            <div class="flex justify-between items-center"><h3 class="text-xs font-bold text-pink-400 uppercase tracking-wider">📋 Customer Orders</h3><button onclick="clearAllOrders()" class="text-[11px] text-red-400 hover:underline">Clear Orders</button></div>
+            <div id="ordersList" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs"></div>
+
+            <div class="flex justify-between items-center mt-4"><h3 class="text-xs font-bold text-pink-400 uppercase tracking-wider">📜 Payment Ledger</h3><button onclick="clearAllPayments()" class="text-[11px] text-red-400 hover:underline">Clear Payments</button></div>
+            <div id="paymentsList" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs"></div>
+        </div>
+
+        <!-- SUB-TAB 2: RECORD PAYMENT -->
+        <div id="admin-sec-payment" class="space-y-3 hidden">
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700 space-y-3">
+                <h3 class="text-xs font-bold text-pink-400 uppercase tracking-wider">💵 Record Payment Collected</h3>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Customer Name or Order ID</label>
+                    <input type="text" id="payCustomer" placeholder="e.g., Sarah / Order #12" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Amount Collected (UGX)</label>
+                    <input type="number" id="payAmount" placeholder="e.g., 80000" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Payment Method</label>
+                    <select id="payMethod" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs">
+                        <option value="Mobile Money">Mobile Money</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Centenary Bank">Centenary Bank Transfer</option>
+                    </select>
+                </div>
+                <button onclick="recordPayment()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 font-bold text-xs rounded-xl">Save Payment Record</button>
+            </div>
+        </div>
+
+        <!-- SUB-TAB 3: UPLOAD MEDIA -->
+        <div id="admin-sec-upload" class="space-y-3 hidden">
+            <form id="mediaUploadForm" class="space-y-3 bg-gray-900 p-4 rounded-2xl border border-gray-700" onsubmit="handleMediaUpload(event)">
+                <h3 class="text-xs font-bold text-pink-400 uppercase tracking-wider">Publish New Image or Video Reel</h3>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Media Format</label>
+                    <select id="uploadType" onchange="toggleUploadTypeFields()" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs">
+                        <option value="image">📷 Cake Image (For Gallery & Showcase)</option>
+                        <option value="video">🎥 Video Reel (File Upload or YouTube Link)</option>
+                    </select>
+                </div>
+                <div id="imageFileBox">
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Select Image File</label>
+                    <input type="file" id="imageFileInput" accept="image/*" class="w-full text-xs text-gray-400">
+                </div>
+                <div id="videoSourceBox" class="hidden space-y-2">
+                    <label class="block text-xs font-semibold text-gray-400">Video Source</label>
+                    <select id="videoSourceType" onchange="toggleVideoSourceInput()" class="w-full p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs">
+                        <option value="file">📁 Upload MP4 / WebM File</option>
+                        <option value="link">🔗 YouTube / Video Web Link</option>
+                    </select>
+                    <div id="videoFileInputBox"><input type="file" id="videoFileInput" accept="video/*" class="w-full text-xs text-gray-400"></div>
+                    <div id="videoUrlInputBox" class="hidden"><input type="url" id="videoUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs"></div>
+                </div>
+                <div><label class="block text-xs font-semibold text-gray-400 mb-1">Title / Cake Name *</label><input type="text" id="mediaTitleInput" required placeholder="e.g., Royal Rose Vanilla Cake" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs"></div>
+                <div><label class="block text-xs font-semibold text-gray-400 mb-1">Description / Tag</label><input type="text" id="mediaDescInput" placeholder="e.g., 8-inch, 3 Layers, Red Velvet" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs"></div>
+                <div><label class="block text-xs font-semibold text-gray-400 mb-1">Price (Optional)</label><input type="text" id="mediaPriceInput" placeholder="e.g., UGX 120,000" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs"></div>
+                <button type="submit" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 font-bold text-xs rounded-xl">Publish to Customers</button>
+            </form>
+        </div>
+
+        <!-- SUB-TAB 4: CATALOG ITEMS -->
+        <div id="admin-sec-items" class="space-y-3 hidden">
+            <h3 class="text-xs font-bold text-pink-400 uppercase tracking-wider">Active Cake Catalog & Gallery</h3>
+            <div id="admin-gallery-list" class="space-y-2 max-h-64 overflow-y-auto pr-1 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- CHANGE PIN MODAL -->
+    <div id="passwordModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-800 rounded-3xl max-w-sm w-full p-6 space-y-4 border border-gray-700">
+            <h3 class="text-base font-bold text-pink-400">Change Owner PIN</h3>
+            <div><label class="block text-xs text-gray-400 mb-1">New PIN</label><input type="password" id="newPinInput" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-xs tracking-widest"></div>
+            <div class="flex gap-2">
+                <button onclick="saveNewPin()" class="flex-1 py-2 bg-pink-600 font-bold rounded-xl text-xs">Save PIN</button>
+                <button onclick="closePasswordModal()" class="flex-1 py-2 bg-gray-700 font-bold rounded-xl text-xs">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       const DB_NAME = "AshasOvenDatabase";
+const DB_VERSION = 1;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains("gallery")) db.createObjectStore("gallery", { keyPath: "id" });
+            if (!db.objectStoreNames.contains("videos")) db.createObjectStore("videos", { keyPath: "id" });
+            if (!db.objectStoreNames.contains("orders")) db.createObjectStore("orders", { keyPath: "id" });
+            if (!db.objectStoreNames.contains("payments")) db.createObjectStore("payments", { keyPath: "id" });
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+    });
+}
+        async function getAllData(storeName) {
+            const db = await openDB();
+            if (!db) return [];
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, "readonly");
+                const req = tx.objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        async function saveData(storeName, dataObj) {
+            const db = await openDB();
+            if (!db) return;
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).put(dataObj);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        async function deleteData(storeName, id) {
+            const db = await openDB();
+            if (!db) return;
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).delete(id);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function verifyPin() {
+            const pin = document.getElementById('pinInput').value.trim();
+            const savedPin = localStorage.getItem('owner_pin') || '1234';
+            if (pin === savedPin) {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('dashboardScreen').classList.remove('hidden');
+                loadLedgerData();
+                renderAdminGalleryList();
+            } else {
+                alert("Incorrect PIN!");
+            }
+        }
+
+        function resetPinToDefault() {
+            localStorage.setItem('owner_pin', '1234');
+            alert("PIN has been reset to default: 1234");
+        }
+
+        function openPasswordModal() { document.getElementById('passwordModal').classList.remove('hidden'); }
+        function closePasswordModal() { document.getElementById('passwordModal').classList.add('hidden'); document.getElementById('newPinInput').value = ''; }
+
+        function saveNewPin() {
+            const newPin = document.getElementById('newPinInput').value.trim();
+            if (newPin.length < 4) return alert("PIN must be at least 4 digits.");
+            localStorage.setItem('owner_pin', newPin);
+            closePasswordModal();
+            showToast("Owner PIN updated successfully!");
+        }
+
+        function switchAdminTab(subTab) {
+            ['orders', 'payment', 'upload', 'items'].forEach(t => {
+                document.getElementById(`admin-sec-${t}`).classList.add('hidden');
+                document.getElementById(`admin-tab-${t}-btn`).className = "flex-1 py-2 font-bold rounded-lg text-gray-400 hover:text-white";
+            });
+            document.getElementById(`admin-sec-${subTab}`).classList.remove('hidden');
+            document.getElementById(`admin-tab-${subTab}-btn`).className = "flex-1 py-2 font-bold rounded-lg bg-gray-800 text-white shadow-sm";
+        }
+
+        async function loadLedgerData() {
+    const orders = await getAllData("orders");
+    const payments = await getAllData("payments");
+
+    document.getElementById('totalOrdersCount').innerText = orders.length;
+    const totalRev = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    document.getElementById('totalRevenueUGX').innerText = totalRev.toLocaleString() + " UGX";
+
+    // Render Orders DB with proper fallback check
+    const ordersContainer = document.getElementById('ordersList');
+    if (orders.length === 0) {
+        ordersContainer.innerHTML = '<p class="text-gray-500">No orders recorded yet.</p>';
+    } else {
+        orders.sort((a, b) => new Date(b.date) - new Date(a.date));
+        ordersContainer.innerHTML = orders.map(o => `
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-700 space-y-1">
+                <div class="flex justify-between items-center font-bold text-pink-300">
+                    <span>${o.name} (${o.phone})</span>
+                    <button onclick="deleteOrder('${o.id}')" class="text-red-400 hover:underline text-xs">Delete</button>
+                </div>
+                <div class="text-gray-300"><b>Order:</b> ${o.category} - ${o.size}</div>
+                <div class="text-gray-300"><b>Address:</b> ${o.address} (${o.fulfillment})</div>
+                ${o.notes ? `<div class="text-gray-400 italic"><b>Notes:</b> ${o.notes}</div>` : ''}
+                <div class="text-[10px] text-gray-500">Ordered on: ${o.date}</div>
+            </div>
+        `).join('');
+    }
+
+    // Render Payments DB
+    const paymentsContainer = document.getElementById('paymentsList');
+    if (payments.length === 0) {
+        paymentsContainer.innerHTML = '<p class="text-gray-500">No payments recorded yet.</p>';
+    } else {
+        payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+        paymentsContainer.innerHTML = payments.map(p => `
+            <div class="bg-gray-900 p-2.5 rounded-xl border border-gray-700 flex justify-between items-center">
+                <div>
+                    <span class="font-bold text-gray-200">${p.customer}</span> 
+                    <span class="text-xs text-gray-400">(${p.method})</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-emerald-400 font-bold">+${Number(p.amount).toLocaleString()} UGX</span>
+                    <button onclick="deletePayment('${p.id}')" class="text-red-400 hover:underline text-xs">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+        async function recordPayment() {
+            const customer = document.getElementById('payCustomer').value.trim();
+            const amount = document.getElementById('payAmount').value.trim();
+            const method = document.getElementById('payMethod').value;
+            if (!customer || !amount) return alert("Fill all fields.");
+
+            await saveData("payments", { id: 'pay_' + Date.now(), customer, amount, method, date: new Date().toLocaleString() });
+            document.getElementById('payCustomer').value = '';
+            document.getElementById('payAmount').value = '';
+            await loadLedgerData();
+            showToast("Payment recorded!");
+        }
+
+        async function deleteOrder(id) {
+            if (confirm("Delete order?")) { await deleteData("orders", id); await loadLedgerData(); showToast("Order deleted"); }
+        }
+
+        async function deletePayment(id) {
+            if (confirm("Delete payment?")) { await deleteData("payments", id); await loadLedgerData(); showToast("Payment deleted"); }
+        }
+
+        async function clearAllOrders() {
+            if (confirm("Clear all orders?")) {
+                const db = await openDB();
+                db.transaction("orders", "readwrite").objectStore("orders").clear();
+                await loadLedgerData();
+                showToast("Orders cleared");
+            }
+        }
+
+        async function clearAllPayments() {
+            if (confirm("Clear all payments?")) {
+                const db = await openDB();
+                db.transaction("payments", "readwrite").objectStore("payments").clear();
+                await loadLedgerData();
+                showToast("Payments cleared");
+            }
+        }
+
+        function toggleUploadTypeFields() {
+            const type = document.getElementById('uploadType').value;
+            document.getElementById('imageFileBox').classList.toggle('hidden', type !== 'image');
+            document.getElementById('videoSourceBox').classList.toggle('hidden', type !== 'video');
+        }
+
+        function toggleVideoSourceInput() {
+            const source = document.getElementById('videoSourceType').value;
+            document.getElementById('videoFileInputBox').classList.toggle('hidden', source !== 'file');
+            document.getElementById('videoUrlInputBox').classList.toggle('hidden', source !== 'link');
+        }
+
+        async function handleMediaUpload(e) {
+            e.preventDefault();
+            const uploadType = document.getElementById('uploadType').value;
+            const title = document.getElementById('mediaTitleInput').value.trim();
+            const desc = document.getElementById('mediaDescInput').value.trim();
+            const price = document.getElementById('mediaPriceInput').value.trim();
+
+            if (uploadType === 'image') {
+                const fileInput = document.getElementById('imageFileInput');
+                if (fileInput.files.length === 0) return alert("Select an image file.");
+                const reader = new FileReader();
+                reader.onload = async function(event) {
+                    await saveData("gallery", { id: 'img_' + Date.now(), title, desc, price, tag: 'New', img: event.target.result });
+                    await renderAdminGalleryList();
+                    showToast("Cake image published!");
+                    document.getElementById('mediaUploadForm').reset();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                const sourceType = document.getElementById('videoSourceType').value;
+                if (sourceType === 'link') {
+                    const url = document.getElementById('videoUrlInput').value.trim();
+                    if (!url) return alert("Enter video link.");
+                    await saveData("videos", { id: 'vid_' + Date.now(), title, desc, url, sourceType: 'link', date: new Date().toLocaleDateString() });
+                    showToast("Video link published!");
+                    document.getElementById('mediaUploadForm').reset();
+                } else {
+                    const fileInput = document.getElementById('videoFileInput');
+                    if (fileInput.files.length === 0) return alert("Select video file.");
+                    const reader = new FileReader();
+                    reader.onload = async function(event) {
+                        await saveData("videos", { id: 'vid_' + Date.now(), title, desc, url: event.target.result, sourceType: 'file', date: new Date().toLocaleDateString() });
+                        showToast("Video file published!");
+                        document.getElementById('mediaUploadForm').reset();
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
+            }
+        }
+
+        async function renderAdminGalleryList() {
+            const container = document.getElementById('admin-gallery-list');
+            const items = await getAllData("gallery");
+            container.innerHTML = items.length === 0 ? '<p class="text-gray-500">No items.</p>' :
+                items.map(item => `<div class="flex items-center justify-between bg-gray-900 p-2 rounded-xl border border-gray-700"><div class="flex items-center gap-2"><img src="${item.img}" class="w-16 h-16 object-cover rounded-lg"><span>${item.title}</span></div><button onclick="deleteGalleryItem('${item.id}')" class="text-red-400">Delete</button></div>`).join('');
+        }
+
+        async function deleteGalleryItem(id) {
+            if (confirm("Delete gallery item?")) { await deleteData("gallery", id); await renderAdminGalleryList(); showToast("Item deleted"); }
+        }
+
+        async function exportDataToCSV() {
+            const orders = await getAllData("orders");
+            const payments = await getAllData("payments");
+            let csv = "=== ORDERS ===\nID,Name,Phone,Category,Size,Date\n";
+            orders.forEach(o => csv += `"${o.id}","${o.name}","${o.phone}","${o.category}","${o.size}","${o.date}"\n`);
+            csv += "\n=== PAYMENTS ===\nID,Customer,Amount (UGX),Method,Date\n";
+            payments.forEach(p => csv += `"${p.id}","${p.customer}","${p.amount}","${p.method}","${p.date}"\n`);
+
+            const link = document.createElement("a");
+            link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
+            link.download = "Ledger_Export.csv";
+            link.click();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => { toast.classList.remove('translate-y-0', 'opacity-100'); toast.classList.add('translate-y-[-100px]', 'opacity-0'); }, 3000);
+        }
+    </script>
+</body>
+</html>
